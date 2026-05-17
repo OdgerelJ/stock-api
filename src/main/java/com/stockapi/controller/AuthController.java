@@ -2,6 +2,7 @@ package com.stockapi.controller;
 
 import com.stockapi.dto.AuthResponse;
 import com.stockapi.dto.LoginRequest;
+import com.stockapi.dto.RefreshRequest;
 import com.stockapi.dto.RegisterRequest;
 import com.stockapi.service.AuthService;
 import jakarta.validation.Valid;
@@ -24,5 +25,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
+        return ResponseEntity.ok(authService.refresh(req));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest req) {
+        authService.logout(req);
+        return ResponseEntity.noContent().build();
     }
 }

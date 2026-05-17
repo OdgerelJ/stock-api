@@ -3,6 +3,7 @@ package com.stockapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockapi.dto.AuthResponse;
 import com.stockapi.dto.LoginRequest;
+import com.stockapi.dto.RefreshRequest;
 import com.stockapi.dto.RegisterRequest;
 import com.stockapi.security.JwtUtil;
 import com.stockapi.security.UserDetailsServiceImpl;
@@ -31,19 +32,23 @@ class AuthControllerTest {
     @MockBean JwtUtil jwtUtil;
     @MockBean UserDetailsServiceImpl userDetailsService;
 
+    private static final AuthResponse MOCK_RESPONSE =
+        new AuthResponse("access-token", "refresh-token", "odgerel");
+
     @Test
     void register_validRequest_returns200() throws Exception {
         RegisterRequest req = new RegisterRequest();
         req.setUsername("odgerel");
         req.setPassword("password123");
 
-        when(authService.register(any())).thenReturn(new AuthResponse("token123", "odgerel"));
+        when(authService.register(any())).thenReturn(MOCK_RESPONSE);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").value("token123"))
+            .andExpect(jsonPath("$.accessToken").value("access-token"))
+            .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
             .andExpect(jsonPath("$.username").value("odgerel"));
     }
 
@@ -77,13 +82,14 @@ class AuthControllerTest {
         req.setUsername("odgerel");
         req.setPassword("password123");
 
-        when(authService.login(any())).thenReturn(new AuthResponse("token123", "odgerel"));
+        when(authService.login(any())).thenReturn(MOCK_RESPONSE);
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").value("token123"));
+            .andExpect(jsonPath("$.accessToken").value("access-token"))
+            .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
     }
 
     @Test
@@ -98,5 +104,46 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refresh_validToken_returns200() throws Exception {
+        RefreshRequest req = new RefreshRequest();
+        req.setRefreshToken("valid-refresh-token");
+
+        when(authService.refresh(any())).thenReturn(MOCK_RESPONSE);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").value("access-token"))
+            .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
+    }
+
+    @Test
+    void refresh_invalidToken_returns401() throws Exception {
+        RefreshRequest req = new RefreshRequest();
+        req.setRefreshToken("bad-token");
+
+        when(authService.refresh(any())).thenThrow(new BadCredentialsException("Invalid refresh token"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void logout_validToken_returns204() throws Exception {
+        RefreshRequest req = new RefreshRequest();
+        req.setRefreshToken("some-refresh-token");
+
+        mockMvc.perform(post("/api/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isNoContent());
+
+        verify(authService).logout(any());
     }
 }
