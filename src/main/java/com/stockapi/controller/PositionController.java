@@ -1,7 +1,7 @@
 package com.stockapi.controller;
 
 import com.stockapi.dto.PositionRequest;
-import com.stockapi.entity.Position;
+import com.stockapi.dto.PositionResponse;
 import com.stockapi.service.PositionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/positions")
@@ -20,12 +21,12 @@ public class PositionController {
     private final PositionService positionService;
 
     @GetMapping
-    public List<Position> list(@AuthenticationPrincipal UserDetails user) {
+    public List<PositionResponse> list(@AuthenticationPrincipal UserDetails user) {
         return positionService.getPositions(user.getUsername());
     }
 
     @PutMapping
-    public Position save(
+    public PositionResponse save(
         @AuthenticationPrincipal UserDetails user,
         @Valid @RequestBody PositionRequest req
     ) {
@@ -39,5 +40,13 @@ public class PositionController {
     ) {
         positionService.delete(user.getUsername(), ticker);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/pnl")
+    public Map<String, Double> pnl(
+        @AuthenticationPrincipal UserDetails user,
+        @RequestBody Map<String, Double> currentPrices
+    ) {
+        return positionService.calcPnl(user.getUsername(), currentPrices);
     }
 }

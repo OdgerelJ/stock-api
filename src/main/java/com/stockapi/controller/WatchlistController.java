@@ -1,6 +1,8 @@
 package com.stockapi.controller;
 
+import com.stockapi.dto.WatchlistRequest;
 import com.stockapi.service.WatchlistService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -8,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/watchlist")
@@ -25,13 +26,9 @@ public class WatchlistController {
     @PostMapping
     public ResponseEntity<Void> add(
         @AuthenticationPrincipal UserDetails user,
-        @RequestBody Map<String, String> body
+        @Valid @RequestBody WatchlistRequest req
     ) {
-        String ticker = body.get("ticker");
-        if (ticker == null || ticker.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-        watchlistService.addTicker(user.getUsername(), ticker);
+        watchlistService.addTicker(user.getUsername(), req.getTicker());
         return ResponseEntity.ok().build();
     }
 
