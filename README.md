@@ -1,5 +1,7 @@
 # Stock API
 
+[![CI](https://github.com/OdgerelJ/stock-api/actions/workflows/ci.yml/badge.svg)](https://github.com/OdgerelJ/stock-api/actions/workflows/ci.yml)
+
 A Spring Boot REST API for managing a personal stock watchlist and portfolio positions. Built to run as a standalone microservice that can be connected to the [ai-semis](../ai-semis) frontend.
 
 ## Tech Stack
